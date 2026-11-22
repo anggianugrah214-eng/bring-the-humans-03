@@ -42,7 +42,15 @@ function readVideoAddress(): string {
 function main(): void {
   readVideoAddress();
   mkdirSync(OUTPUT_DIR, { recursive: true });
-  copyFileSync(join(BOT_DIR, VIDEO_FILE), join(OUTPUT_DIR, VIDEO_FILE));
+  const source = join(BOT_DIR, VIDEO_FILE);
+  const target = join(OUTPUT_DIR, VIDEO_FILE);
+  copyFileSync(source, target);
+  // The gate reads the copy, not the original: prove the copy is the same
+  // bytes before reporting success, so a truncated or partial write can
+  // never hand over a different address than the one just validated.
+  if (!readFileSync(target).equals(readFileSync(source))) {
+    throw new Error(`${VIDEO_FILE} in the output differs from the validated original`);
+  }
 }
 
 try {
